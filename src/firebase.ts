@@ -21,15 +21,15 @@ import { getAnalytics } from 'firebase/analytics'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: 'AIzaSyAzgiYzFiK7gYkfLVMMmJT32JMSZMedzMk',
-  authDomain: 'quizlet-project-bf6c0.firebaseapp.com',
-  projectId: 'quizlet-project-bf6c0',
-  storageBucket: 'quizlet-project-bf6c0.firebasestorage.app',
-  messagingSenderId: '497819954348',
-  appId: '1:497819954348:web:35d3b7a815acb30764c309',
-}
+  apiKey: "AIzaSyAzgiYzFiK7gYkfLVMMmJT32JMSZMedzMk",
+  authDomain: "quizlet-project-bf6c0.firebaseapp.com",
+  projectId: "quizlet-project-bf6c0",
+  storageBucket: "quizlet-project-bf6c0.firebasestorage.app",
+  messagingSenderId: "497819954348",
+  appId: "1:497819954348:web:35d3b7a815acb30764c309"
+};
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig)
+const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app)
 export const auth = getAuth(app)

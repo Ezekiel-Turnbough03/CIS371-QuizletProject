@@ -7,7 +7,7 @@
     </nav>
 
     <!-- while loading -->
-    <div v-if="!flashcardStore.loaded">
+    <div v-if="!currentSet">
       <p>Loading flashcards...</p>
     </div>
 
@@ -57,12 +57,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, watch } from "vue"
 import { useFlashcardStore } from "@/stores/FlashcardStore"
 
 // store
 const flashcardStore = useFlashcardStore()
-flashcardStore.init()
+// flashcardStore.init()
 
 const index = ref(0)
 const userAnswer = ref("")
@@ -70,11 +70,14 @@ const correctCount = ref(0)
 const showResults = ref(false)
 const shuffledCards = ref<any[]>([])
 const missedQuestions = ref<any[]>([])
+const currentSet = computed(() => flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId))
+const cards = computed(() => currentSet.value?.cards ?? [])
+
 
 // shuffle cards after loaded
 onMounted(() => {
   setTimeout(() => {
-    shuffledCards.value = [...flashcardStore.cards].sort(
+    shuffledCards.value = [...cards.value].sort(
       () => Math.random() - 0.5
     )
   }, 200)
@@ -117,7 +120,7 @@ function restartTest() {
   showResults.value = false
   missedQuestions.value = []
 
-  shuffledCards.value = [...flashcardStore.cards].sort(
+  shuffledCards.value = [...cards.value].sort(
     () => Math.random() - 0.5
   )
 }

@@ -39,7 +39,7 @@ import FlashcardsScreen from "./FlashcardsScreen.vue";
 
 // Store
 const flashcardStore = useFlashcardStore()
-flashcardStore.init()
+// flashcardStore.init()
 
 //tile type
 interface Tile {
@@ -53,15 +53,16 @@ interface Tile {
 
 const tiles = ref<Tile[]>([])
 const selected = ref<Tile[]>([])
-const totalPairs = computed(() => flashcardStore.cards.length)
+const currentSet = computed(() => flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId))
+const totalPairs = computed(() => currentSet.value?.cards.length)
 
 // build 4x4 grid
 onMounted(() => {
   // wait untul snapshot loads
   const unwatch = watch(
-    () => flashcardStore.cards,
+    () => currentSet.value?.cards,
     (cards) => {
-      if (cards.length > 0) {
+      if (cards && cards.length > 0) {
         buildTiles()
       }
     },
@@ -72,7 +73,7 @@ onMounted(() => {
 function buildTiles() {
   const baseTiles: Tile[] = []
 
-  flashcardStore.cards.forEach((card, index) => {
+  currentSet.value?.cards.forEach((card, index) => {
     baseTiles.push({
       id: index*2,
       matchedId: index,

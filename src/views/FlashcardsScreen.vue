@@ -4,6 +4,14 @@
       <router-link class="SelectorCard" to="/">Back</router-link>
     </nav>
 
+    <div class="auth-row">
+      <button v-if="!flashcardStore.user" @click="withGoogle">Sign In</button>
+      <div v-else class="logged-in-row">
+        <span class="user-label">Signed in as {{  flashcardStore.user.email }}</span>
+        <button @click="signOutUser">Sign Out</button>
+      </div>
+    </div>
+
     <div class="FlashCard" @click="FlipCard">
       <div class="flip-inner" :class="{ 'is-flipped': isFlipped }">
         <div class="flip-face flip-front">
@@ -20,36 +28,99 @@
       <button @click="GoToPreviousCard">Previous</button>
       <button @click="GoToNextCard">Next</button>
     </div>
+
+    <div class="add-card" v-if="flashcardStore.user && currentSet">
+      <h3>Add New Flashcard to "{{ currentSet.name }}"</h3>
+      <input v-model="newTerm" placeholder="Enter Term" class="input" />
+      <input v-model="newDefinition" placeholder="Enter Definition" class="input" />
+      <button @click="addCard" class="add-button">Add Flashcard</button>
+    </div>
+
+    <div v-if="flashcardStore.user && flashcardStore.setsLoaded && flashcardStore.sets.length === 0">
+      <p>No sets added yet. Create one to start.</p>
+      <input v-model="newSetName" placeholder="Set name" class="input" />
+      <button @click="createSet" class="add-button">Create Set</button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useFlashcardStore } from '@/stores/FlashcardStore'
-
+import { withGoogle, signOutUser } from '@/auth'
 const flashcardStore = useFlashcardStore()
-flashcardStore.init()
+// flashcardStore.init()
 
 const currentIndex = ref(0)
 const isFlipped = ref(false)
+const newTerm = ref("")
+const newDefinition = ref("")
+const newSetName = ref("")
+const currentSet = computed(() => flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId))
+const currentCard = computed(() => currentSet.value?.cards[currentIndex.value])
 
-const currentCard = computed(() => flashcardStore.cards[currentIndex.value])
+watch(() => flashcardStore.currentSetId, (id) => {
+  currentIndex.value = 0
+  isFlipped.value = false
+  if (id) flashcardStore.loadCards(id)
+})
+
+watch(() => flashcardStore.user, (user) => {
+  if (user && flashcardStore.sets.length > 0 && !flashcardStore.currentSetId) {
+    const firstSet = flashcardStore.sets[0]
+    if (firstSet?.id) {
+      flashcardStore.currentSetId = firstSet.id
+    }
+  }
+})
+
+watch(() => flashcardStore.sets, (sets) => {
+  if (!flashcardStore.user && sets.length > 0 && !flashcardStore.currentSetId) {
+    const firstSet = sets[0]
+    if (firstSet?.id) {
+      flashcardStore.currentSetId = firstSet.id
+    }
+    flashcardStore.setsLoaded = true
+  }
+}, {immediate: true})
 
 function FlipCard() {
-  if (flashcardStore.cards.length === 0) return
+  if (!currentSet.value || currentSet.value.cards.length === 0) return
   isFlipped.value = !isFlipped.value
 }
 
 function GoToNextCard() {
-  if (flashcardStore.cards.length === 0) return
-  currentIndex.value = (currentIndex.value + 1) % flashcardStore.cards.length
+  if (!currentSet.value || currentSet.value.cards.length === 0) return
+  currentIndex.value = (currentIndex.value + 1) % currentSet.value.cards.length
   isFlipped.value = false
 }
 
 function GoToPreviousCard() {
-  if (flashcardStore.cards.length === 0) return
+  if (!currentSet.value || currentSet.value.cards.length === 0) return
   currentIndex.value =
-    (currentIndex.value - 1 + flashcardStore.cards.length) % flashcardStore.cards.length
+    (currentIndex.value - 1 + currentSet.value.cards.length) % currentSet.value.cards.length
   isFlipped.value = false
 }
+
+async function addCard() {
+  if (!newTerm.value.trim() || !newDefinition.value.trim() || !currentSet.value) return;
+  await flashcardStore.addCardToSet(currentSet.value.id!,{ term: newTerm.value, definition: newDefinition.value });
+  newTerm.value = ""
+  newDefinition.value = ""
+}
+
+async function createSet() {
+  if (!newSetName.value.trim()) return
+  await flashcardStore.addSet(newSetName.value)
+  newSetName.value = ""
+}
 </script>
+
+<style scoped>
+.auth-row {
+  margin-bottom: 12px
+}
+.user-label {
+  margin-right: 8px;
+}
+</style>
