@@ -42,13 +42,26 @@ export const useFlashcardStore = defineStore('FlashcardStore', {
 
       const setsRef = collection(db, "users", user.uid, "flashcardSets")
 
-      this.unsubscribe = onSnapshot(setsRef, (snapshot) => {
+      this.unsubscribe = onSnapshot(setsRef, async (snapshot) => {
+        if (snapshot.empty) {
+          await this.DefaultSet();
+          return;
+        }
+
         this.sets = snapshot.docs.map((doc) => ({
-          id: doc.id,
+          id: doc.id!,
           name: doc.data().name,
           cards: []
-        }))
-      })
+        }));
+        this.setsLoaded = true;
+
+        if (!this.currentSetId && this.sets.length > 0) {
+          this.currentSetId = this.sets[0]?.id ?? null;
+        }
+        if (this.currentSetId) {
+          this.loadCards(this.currentSetId);
+        }
+      });
     },
 
     // init() {
@@ -96,5 +109,32 @@ export const useFlashcardStore = defineStore('FlashcardStore', {
       const flashcardsRef = collection(db, "users", this.user.uid, 'flashcardSets', setId, "cards")
       await addDoc(flashcardsRef, card)
     },
-  },
-})
+
+    async DefaultSet() {
+      if (!this.user) return;
+
+      if (this.sets.length > 0) return;
+
+      const SetRef = await addDoc(
+        collection(db, "users", this.user.uid, "flashcardSets"),
+        { name: "CIS371" }
+      );
+
+      const defaultCards = [
+        { term: "CSS", definition: "Cascading Style Sheet. Used to define the visual presentation of a web page" },
+        { term: "DOM Tree", definition: "Document Object Model Tree. Tree-like model where each element of a web page is organized into nodes placed in a parent child hierarchical structure." },
+        { term: "Flexbox", definition: "CSS container used to align nested web page elements in within a larger container." },
+        { term: "HTML", definition: "Hypertext Markup Language, Not a programming language, but a presentation language, Code for structuring and displaying a web document, An HTML file should have either an .htm or .html file extension" },
+        { term: "Web Page", definition: "Document written in HTML (Hypertext Markup Language)" },
+        { term: "Web Server", definition: "Computer that stores and delivers web pages" }
+      ];
+
+      for (const card of defaultCards) {
+        await addDoc(
+          collection(db, "users", this.user.uid, "flashcardSets", SetRef.id, "cards"), card
+        );
+      }
+      this.currentSetId = SetRef.id;
+    }, 
+    }
+  },)
