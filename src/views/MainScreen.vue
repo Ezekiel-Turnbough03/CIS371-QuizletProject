@@ -47,7 +47,7 @@
       </div>
 
       <footer style="margin-left: 80px; margin-top: 40px">
-        <p>Names: Ezekiel Turnbough</p>
+        <p>Names: Ezekiel Turnbough, Ethan Umana, Tristian Paquette</p>
       </footer>
     </div>
   </div>
@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useFlashcardStore } from '@/stores/FlashcardStore'
-import { storeToRefs } from 'pinia';
+import { storeToRefs } from 'pinia'
 
 const flashcardStore = useFlashcardStore()
 // flashcardStore.init()
@@ -64,14 +64,19 @@ const flashcardStore = useFlashcardStore()
 const currentIndex = ref(0)
 const isFlipped = ref(false)
 
-const currentSet = computed(() => flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId))
+const currentSet = computed(() =>
+  flashcardStore.sets.find((s) => s.id === flashcardStore.currentSetId),
+)
 const currentCard = computed(() => currentSet.value?.cards[currentIndex.value])
 
-watch(() => flashcardStore.currentSetId, (id) => {
-  if (id) flashcardStore.loadCards(id)
-  currentIndex.value = 0
-  isFlipped.value = false
-})
+watch(
+  () => flashcardStore.currentSetId,
+  (id) => {
+    if (id) flashcardStore.loadCards(id)
+    currentIndex.value = 0
+    isFlipped.value = false
+  },
+)
 
 function FlipCard() {
   if (!currentSet.value || currentSet.value.cards.length === 0) return
@@ -92,9 +97,9 @@ function GoToPreviousCard() {
 }
 
 const createNewSet = () => {
-  const name = prompt("Enter The Set Name: ");
+  const name = prompt('Enter The Set Name: ')
   if (name && name.trim().length > 0) {
-    flashcardStore.addNewSet(name.trim());
+    flashcardStore.addNewSet(name.trim())
   }
 }
 </script>
