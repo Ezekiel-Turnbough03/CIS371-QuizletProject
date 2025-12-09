@@ -62,6 +62,24 @@ export const useFlashcardStore = defineStore('FlashcardStore', {
           this.loadCards(this.currentSetId);
         }
       });
+
+    this.unsubscribe = onSnapshot(setsRef, async (snapshot) => {
+      await this.DefaultSet2();
+
+      this.sets = snapshot.docs.map((doc) => ({
+        id: doc.id!,
+        name: doc.data().name,
+        cards: []
+      }));
+      this.setsLoaded = true;
+
+      if (!this.currentSetId && this.sets.length > 0) {
+        this.currentSetId = this.sets[0]?.id ?? null;
+      }
+      if (this.currentSetId) {
+        this.loadCards(this.currentSetId);
+      }
+    });
     },
 
     // init() {
@@ -134,7 +152,50 @@ export const useFlashcardStore = defineStore('FlashcardStore', {
           collection(db, "users", this.user.uid, "flashcardSets", SetRef.id, "cards"), card
         );
       }
+      
       this.currentSetId = SetRef.id;
-    }, 
+    },
+    
+    async DefaultSet2() {
+      if (!this.user) return;
+
+      if (this.sets.length > 0) return;
+
+      const SetRef = await addDoc(
+        collection(db, "users", this.user.uid, "flashcardSets"),
+        { name: "Food" }
+      )
+
+      const defaultCards = [
+        { term: "Cereal", definition: "A grain used for food, such as wheat, oats, or corn." },
+        { term: "Rice", definition: "A swamp grass which is widely cultivated as a source of food, especially in Asia." },
+        { term: "Broccoli", definition: "A cultivated variety of cabbage bearing heads of green or purplish flower buds that are eaten as a vegetable." },
+        { term: "Groud Turkey", definition: "A versatile, minced meat made from turkey, combining dark and light meat with skin and fat, processed into a ground form, offering a leaner, high-protein alternative to ground beef for dishes" },
+        { term: "Waffles", definition: "A crisp, batter-based cake with a grid pattern from being cooked in a waffle iron, often served with toppings like syrup or fruit." }
+      ];
+
+      for (const card of defaultCards) {
+        await addDoc(
+          collection(db, "users", this.user.uid, "flashcardSets", SetRef.id, "cards"), card
+        );
+      }
+      
+      this.currentSetId = SetRef.id;
+    },
+
+
+    async addNewSet(name: string) {
+      if (!this.user) return;
+
+      const setsRef = collection(db, "users", this.user.uid, "flashcardSets");
+      
+      const docRef = await addDoc(setsRef, {
+        name: name,
+      });
+
+      this.currentSetId = docRef.id;
+
+      await this.loadCards(docRef.id);
+      }
     }
   },)

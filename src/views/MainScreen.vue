@@ -10,6 +10,9 @@
         <router-link class="SelectorCard" to="/group-test">GroupTest</router-link>
       </nav>
     </header>
+
+    <button v-if="flashcardStore.sets.length > 0" @click="createNewSet">New Set</button>
+
     <div v-if="flashcardStore.sets.length > 0" class="set-selector">
       <label>Select Set: </label>
       <select v-model="flashcardStore.currentSetId">
@@ -53,6 +56,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useFlashcardStore } from '@/stores/FlashcardStore'
+import { storeToRefs } from 'pinia';
 
 const flashcardStore = useFlashcardStore()
 // flashcardStore.init()
@@ -85,5 +89,12 @@ function GoToPreviousCard() {
   currentIndex.value =
     (currentIndex.value - 1 + currentSet.value.cards.length) % currentSet.value.cards.length
   isFlipped.value = false
+}
+
+const createNewSet = () => {
+  const name = prompt("Enter The Set Name: ");
+  if (name && name.trim().length > 0) {
+    flashcardStore.addNewSet(name.trim());
+  }
 }
 </script>
