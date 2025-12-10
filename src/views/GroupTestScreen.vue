@@ -15,11 +15,7 @@
     <div v-else-if="mode === 'host' && !gameCode">
       <h2>Host a Game</h2>
       <p>Use your currently selected flashcard set.</p>
-      <input
-        v-model="hostNickname"
-        class="input"
-        placeholder="Enter your nickname"
-      />
+      <input v-model="hostNickname" class="input" placeholder="Enter your nickname" />
       <button @click="hostGame">Create Game</button>
     </div>
 
@@ -30,14 +26,10 @@
 
       <h3>Players Joined:</h3>
       <ul>
-        <li v-for="p in players" :key="p.name">
-          {{ p.name }} (score: {{ p.score }})
-        </li>
+        <li v-for="p in players" :key="p.name">{{ p.name }} (score: {{ p.score }})</li>
       </ul>
 
-      <button @click="startGame" :disabled="players.length === 0">
-        Start Game
-      </button>
+      <button @click="startGame" :disabled="players.length === 0">Start Game</button>
     </div>
 
     <!-- question -->
@@ -63,9 +55,7 @@
 
       <h3>Scores</h3>
       <ul>
-        <li v-for="p in sortedPlayers" :key="p.name">
-          {{ p.name }} – {{ p.score }}
-        </li>
+        <li v-for="p in sortedPlayers" :key="p.name">{{ p.name }} – {{ p.score }}</li>
       </ul>
 
       <p v-if="hasAnswered">You have answered. Waiting for others...</p>
@@ -77,11 +67,7 @@
       <p>Results for Question {{ currentIndex + 1 }}</p>
 
       <ul>
-        <li
-          v-for="p in sortedPlayers"
-          :key="p.name"
-          :class="{ correct: p.lastAnswerCorrect }"
-        >
+        <li v-for="p in sortedPlayers" :key="p.name" :class="{ correct: p.lastAnswerCorrect }">
           {{ p.name }} – {{ p.score }}
           <span v-if="p.lastAnswerCorrect"> (correct)</span>
         </li>
@@ -95,9 +81,7 @@
       <h2>Game Finished!</h2>
       <h3>Final Standings</h3>
       <ul>
-        <li v-for="p in sortedPlayers" :key="p.name">
-          {{ p.name }} – {{ p.score }}
-        </li>
+        <li v-for="p in sortedPlayers" :key="p.name">{{ p.name }} – {{ p.score }}</li>
       </ul>
 
       <button @click="resetLocal">Back to Mode Select</button>
@@ -106,16 +90,8 @@
     <!-- join -->
     <div v-else-if="mode === 'join' && !joined">
       <h2>Join a Game</h2>
-      <input
-        v-model="joinCode"
-        class="input"
-        placeholder="Enter Game Code"
-      />
-      <input
-        v-model="nickname"
-        class="input"
-        placeholder="Enter Nickname"
-      />
+      <input v-model="joinCode" class="input" placeholder="Enter Game Code" />
+      <input v-model="nickname" class="input" placeholder="Enter Nickname" />
       <button @click="joinGame">Join</button>
     </div>
 
@@ -125,36 +101,27 @@
       <p>Game Code: {{ gameCode }}</p>
       <h3>Players:</h3>
       <ul>
-        <li v-for="p in players" :key="p.name">
-          {{ p.name }} – {{ p.score }}
-        </li>
+        <li v-for="p in players" :key="p.name">{{ p.name }} – {{ p.score }}</li>
       </ul>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue"
-import { db } from "@/firebase"
-import { useFlashcardStore } from "@/stores/FlashcardStore"
-import {
-  doc,
-  setDoc,
-  updateDoc,
-  collection,
-  onSnapshot,
-  getDoc
-} from "firebase/firestore"
+import { ref, computed, watch } from 'vue'
+import { db } from '@/firebase'
+import { useFlashcardStore } from '@/stores/FlashcardStore'
+import { doc, setDoc, updateDoc, collection, onSnapshot, getDoc } from 'firebase/firestore'
 
 const flashcardStore = useFlashcardStore()
 
 // variables
-const mode = ref<"choose" | "host" | "join">("choose")
-const gameCode = ref("")
-const phase = ref<"lobby" | "question" | "scoreboard" | "finished">("lobby")
-const hostNickname = ref("")
-const joinCode = ref("")
-const nickname = ref("")
+const mode = ref<'choose' | 'host' | 'join'>('choose')
+const gameCode = ref('')
+const phase = ref<'lobby' | 'question' | 'scoreboard' | 'finished'>('lobby')
+const hostNickname = ref('')
+const joinCode = ref('')
+const nickname = ref('')
 const joined = ref(false)
 const isHostClient = ref(false)
 const cards = ref<any[]>([])
@@ -166,9 +133,9 @@ const scoredForIndex = ref<number | null>(null)
 
 // create lobby code
 function generateCode() {
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   return (
-    letters[Math.floor(Math.random() * 26)] +
+    letters[Math.floor(Math.random() * 26)]! +
     letters[Math.floor(Math.random() * 26)] +
     Math.floor(100 + Math.random() * 900)
   )
@@ -176,9 +143,7 @@ function generateCode() {
 
 const currentCard = computed(() => cards.value[currentIndex.value] || {})
 
-const sortedPlayers = computed(() =>
-  [...players.value].sort((a, b) => b.score - a.score)
-)
+const sortedPlayers = computed(() => [...players.value].sort((a, b) => b.score - a.score))
 
 // build multiple choices for each question
 function buildChoices() {
@@ -192,14 +157,14 @@ function buildChoices() {
   const others = cards.value.filter((c, i) => i !== currentIndex.value)
 
   const wrong = [...others].sort(() => Math.random() - 0.5).slice(0, 3)
-  const all = [...wrong.map(c => c.term), correct]
+  const all = [...wrong.map((c) => c.term), correct]
 
   choices.value = all.sort(() => Math.random() - 0.5)
 }
 
 // update choices when question changes
 watch([() => currentIndex.value, () => cards.value.length, () => phase.value], () => {
-  if (phase.value === "question" && cards.value.length > 0) {
+  if (phase.value === 'question' && cards.value.length > 0) {
     hasAnswered.value = false
     buildChoices()
   }
@@ -207,13 +172,13 @@ watch([() => currentIndex.value, () => cards.value.length, () => phase.value], (
 
 // Firestore listeners
 function setupGameListeners(code: string) {
-  const gameRef = doc(db, "group_games", code)
-  const playersRef = collection(gameRef, "players")
+  const gameRef = doc(db, 'group_games', code)
+  const playersRef = collection(gameRef, 'players')
 
   onSnapshot(gameRef, (snap) => {
     const data = snap.data()
     if (!data) return
-    phase.value = data.phase || "lobby"
+    phase.value = data.phase || 'lobby'
     currentIndex.value = data.currentQuestionIndex ?? 0
     cards.value = data.cards || []
   })
@@ -221,13 +186,11 @@ function setupGameListeners(code: string) {
   onSnapshot(playersRef, (snap) => {
     players.value = snap.docs.map((d) => d.data())
 
-    const everyoneAnswered =
-      players.value.length > 0 &&
-      players.value.every((p) => p.hasAnswered)
+    const everyoneAnswered = players.value.length > 0 && players.value.every((p) => p.hasAnswered)
 
     if (
       isHostClient.value &&
-      phase.value === "question" &&
+      phase.value === 'question' &&
       everyoneAnswered &&
       scoredForIndex.value !== currentIndex.value
     ) {
@@ -240,23 +203,23 @@ function setupGameListeners(code: string) {
 // host creates a game
 async function hostGame() {
   if (!hostNickname.value.trim()) {
-    alert("Please enter a nickname.")
+    alert('Please enter a nickname.')
     return
   }
 
   if (!flashcardStore.currentSetId) {
-    alert("Select a flashcard set first.")
+    alert('Select a flashcard set first.')
     return
   }
 
-  const set = flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId)
+  const set = flashcardStore.sets.find((s) => s.id === flashcardStore.currentSetId)
   if (!set || set.cards.length === 0) {
-    alert("Selected set has no cards.")
+    alert('Selected set has no cards.')
     return
   }
 
   isHostClient.value = true
-  mode.value = "host"
+  mode.value = 'host'
 
   cards.value = [...set.cards].sort(() => Math.random() - 0.5)
   currentIndex.value = 0
@@ -264,25 +227,25 @@ async function hostGame() {
   const code = generateCode()
   gameCode.value = code
 
-  const gameRef = doc(db, "group_games", code)
+  const gameRef = doc(db, 'group_games', code)
   await setDoc(gameRef, {
     host: hostNickname.value,
     setId: set.id,
     setName: set.name,
     cards: cards.value,
     currentQuestionIndex: 0,
-    phase: "lobby",
-    createdAt: Date.now()
+    phase: 'lobby',
+    createdAt: Date.now(),
   })
 
-  const playersRef = collection(gameRef, "players")
+  const playersRef = collection(gameRef, 'players')
   await setDoc(doc(playersRef, hostNickname.value), {
     name: hostNickname.value,
     score: 0,
     hasAnswered: false,
     lastAnswerCorrect: false,
-    lastChoice: "",
-    answerTime: 0
+    lastChoice: '',
+    answerTime: 0,
   })
 
   joined.value = true
@@ -292,9 +255,9 @@ async function hostGame() {
 async function startGame() {
   if (!gameCode.value) return
 
-  await updateDoc(doc(db, "group_games", gameCode.value), {
-    phase: "question",
-    currentQuestionIndex: 0
+  await updateDoc(doc(db, 'group_games', gameCode.value), {
+    phase: 'question',
+    currentQuestionIndex: 0,
   })
 
   scoredForIndex.value = null
@@ -303,16 +266,16 @@ async function startGame() {
 // joining a game
 async function joinGame() {
   if (!joinCode.value.trim() || !nickname.value.trim()) {
-    alert("Enter both fields.")
+    alert('Enter both fields.')
     return
   }
 
   const code = joinCode.value.trim().toUpperCase()
-  const gameRef = doc(db, "group_games", code)
+  const gameRef = doc(db, 'group_games', code)
   const snap = await getDoc(gameRef)
 
   if (!snap.exists()) {
-    alert("Game not found.")
+    alert('Game not found.')
     return
   }
 
@@ -322,16 +285,16 @@ async function joinGame() {
   const data = snap.data()
   cards.value = data?.cards || []
   currentIndex.value = data?.currentQuestionIndex ?? 0
-  phase.value = data?.phase || "lobby"
+  phase.value = data?.phase || 'lobby'
 
-  const playersRef = collection(gameRef, "players")
+  const playersRef = collection(gameRef, 'players')
   await setDoc(doc(playersRef, nickname.value.trim()), {
     name: nickname.value.trim(),
     score: 0,
     hasAnswered: false,
     lastAnswerCorrect: false,
-    lastChoice: "",
-    answerTime: 0
+    lastChoice: '',
+    answerTime: 0,
   })
 
   joined.value = true
@@ -341,7 +304,7 @@ async function joinGame() {
 // answering
 async function submitChoice(choice: string) {
   if (hasAnswered.value || !gameCode.value) return
-  if (phase.value !== "question") return
+  if (phase.value !== 'question') return
 
   hasAnswered.value = true
 
@@ -354,15 +317,15 @@ async function submitChoice(choice: string) {
   const correct = picked === correctAnswer
   const name = isHostClient.value ? hostNickname.value : nickname.value
 
-  const current = players.value.find(p => p.name === name)
+  const current = players.value.find((p) => p.name === name)
   const score = current ? current.score : 0
 
-  await updateDoc(doc(db, "group_games", gameCode.value, "players", name), {
+  await updateDoc(doc(db, 'group_games', gameCode.value, 'players', name), {
     hasAnswered: true,
     lastAnswerCorrect: correct,
     lastChoice: choice,
     answerTime: Date.now(),
-    score
+    score,
   })
 }
 
@@ -370,23 +333,23 @@ async function submitChoice(choice: string) {
 async function scoreCurrentQuestion() {
   if (!gameCode.value) return
 
-  const gameRef = doc(db, "group_games", gameCode.value)
-  const playersRef = collection(gameRef, "players")
+  const gameRef = doc(db, 'group_games', gameCode.value)
+  const playersRef = collection(gameRef, 'players')
   const total = players.value.length
 
   const correctPlayers = players.value
-    .filter(p => p.lastAnswerCorrect)
+    .filter((p) => p.lastAnswerCorrect)
     .sort((a, b) => (a.answerTime || 0) - (b.answerTime || 0))
 
   for (let i = 0; i < correctPlayers.length; i++) {
     const p = correctPlayers[i]
     const gain = Math.max(total - i, 1)
     await updateDoc(doc(playersRef, p.name), {
-      score: (p.score || 0) + gain
+      score: (p.score || 0) + gain,
     })
   }
 
-  await updateDoc(gameRef, { phase: "scoreboard" })
+  await updateDoc(gameRef, { phase: 'scoreboard' })
 
   setTimeout(async () => {
     await advanceToNextQuestion()
@@ -396,11 +359,11 @@ async function scoreCurrentQuestion() {
 async function advanceToNextQuestion() {
   if (!gameCode.value) return
 
-  const gameRef = doc(db, "group_games", gameCode.value)
-  const playersRef = collection(gameRef, "players")
+  const gameRef = doc(db, 'group_games', gameCode.value)
+  const playersRef = collection(gameRef, 'players')
 
   if (currentIndex.value + 1 >= cards.value.length) {
-    await updateDoc(gameRef, { phase: "finished" })
+    await updateDoc(gameRef, { phase: 'finished' })
     return
   }
 
@@ -410,29 +373,29 @@ async function advanceToNextQuestion() {
 
   await updateDoc(gameRef, {
     currentQuestionIndex: next,
-    phase: "question"
+    phase: 'question',
   })
 
   for (const p of players.value) {
     await updateDoc(doc(playersRef, p.name), {
       hasAnswered: false,
       lastAnswerCorrect: false,
-      lastChoice: "",
-      answerTime: 0
+      lastChoice: '',
+      answerTime: 0,
     })
   }
 }
 
 // go back to choose screen
 function resetLocal() {
-  mode.value = "choose"
-  gameCode.value = ""
-  joinCode.value = ""
-  nickname.value = ""
-  hostNickname.value = ""
+  mode.value = 'choose'
+  gameCode.value = ''
+  joinCode.value = ''
+  nickname.value = ''
+  hostNickname.value = ''
   joined.value = false
   isHostClient.value = false
-  phase.value = "lobby"
+  phase.value = 'lobby'
   cards.value = []
   currentIndex.value = 0
   players.value = []
