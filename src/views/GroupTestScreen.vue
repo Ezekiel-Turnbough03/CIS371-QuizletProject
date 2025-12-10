@@ -168,7 +168,7 @@ const scoredForIndex = ref<number | null>(null)
 function generateCode() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   return (
-    letters[Math.floor(Math.random() * 26)] +
+    letters[Math.floor(Math.random() * 26)]! +
     letters[Math.floor(Math.random() * 26)] +
     Math.floor(100 + Math.random() * 900)
   )
