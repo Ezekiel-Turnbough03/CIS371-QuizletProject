@@ -59,7 +59,6 @@ import { useFlashcardStore } from '@/stores/FlashcardStore'
 import { storeToRefs } from 'pinia'
 
 const flashcardStore = useFlashcardStore()
-// flashcardStore.init()
 
 const currentIndex = ref(0)
 const isFlipped = ref(false)
@@ -69,6 +68,7 @@ const currentSet = computed(() =>
 )
 const currentCard = computed(() => currentSet.value?.cards[currentIndex.value])
 
+// watches current set changes
 watch(
   () => flashcardStore.currentSetId,
   (id) => {
@@ -96,6 +96,7 @@ function GoToPreviousCard() {
   isFlipped.value = false
 }
 
+// Makes new custom set with user input name
 const createNewSet = () => {
   const name = prompt('Enter The Set Name: ')
   if (name && name.trim().length > 0) {

@@ -35,12 +35,6 @@
       <input v-model="newDefinition" placeholder="Enter Definition" class="input" />
       <button @click="addCard" class="add-button">Add Flashcard</button>
     </div>
-
-    <div v-if="flashcardStore.user && flashcardStore.setsLoaded && flashcardStore.sets.length === 0">
-      <p>No sets added yet. Create one to start.</p>
-      <input v-model="newSetName" placeholder="Set name" class="input" />
-      <button @click="createSet" class="add-button">Create Set</button>
-    </div>
   </div>
 </template>
 
@@ -59,12 +53,14 @@ const newSetName = ref("")
 const currentSet = computed(() => flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId))
 const currentCard = computed(() => currentSet.value?.cards[currentIndex.value])
 
+// when selected set changes
 watch(() => flashcardStore.currentSetId, (id) => {
   currentIndex.value = 0
   isFlipped.value = false
   if (id) flashcardStore.loadCards(id)
 })
 
+// when user logs in select first set
 watch(() => flashcardStore.user, (user) => {
   if (user && flashcardStore.sets.length > 0 && !flashcardStore.currentSetId) {
     const firstSet = flashcardStore.sets[0]
@@ -74,8 +70,9 @@ watch(() => flashcardStore.user, (user) => {
   }
 })
 
+// when sets load
 watch(() => flashcardStore.sets, (sets) => {
-  if (!flashcardStore.user && sets.length > 0 && !flashcardStore.currentSetId) {
+  if (sets.length > 0 && !flashcardStore.currentSetId) {
     const firstSet = sets[0]
     if (firstSet?.id) {
       flashcardStore.currentSetId = firstSet.id
@@ -102,6 +99,7 @@ function GoToPreviousCard() {
   isFlipped.value = false
 }
 
+// add new flashcard to selected set
 async function addCard() {
   if (!newTerm.value.trim() || !newDefinition.value.trim() || !currentSet.value) return;
   await flashcardStore.addCardToSet(currentSet.value.id!,{ term: newTerm.value, definition: newDefinition.value });
@@ -109,11 +107,6 @@ async function addCard() {
   newDefinition.value = ""
 }
 
-async function createSet() {
-  if (!newSetName.value.trim()) return
-  await flashcardStore.addSet(newSetName.value)
-  newSetName.value = ""
-}
 </script>
 
 <style scoped>

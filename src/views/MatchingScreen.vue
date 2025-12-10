@@ -6,6 +6,7 @@
       <router-link class="SelectorCard" to="/">Back</router-link>
     </nav>
 
+    <!-- grid of tiles -->
     <div class="grid">
       <div
         v-for="tile in tiles"
@@ -17,6 +18,7 @@
         }"
         @click="selectTile(tile)"
       >
+      <!-- onlt show if tile is reveled or matching -->
         <span v-if="tile.revealed || tile.matched">
           {{ tile.value }}
         </span>
@@ -37,11 +39,10 @@ import {ref, computed, onMounted, watch } from "vue"
 import { useFlashcardStore } from "@/stores/FlashcardStore";
 import FlashcardsScreen from "./FlashcardsScreen.vue";
 
-// Store
+// load flashcard store
 const flashcardStore = useFlashcardStore()
-// flashcardStore.init()
 
-//tile type
+// tile types
 interface Tile {
   id: number
   matchedId: number
@@ -51,12 +52,12 @@ interface Tile {
   matched: boolean
 }
 
-const tiles = ref<Tile[]>([])
-const selected = ref<Tile[]>([])
-const currentSet = computed(() => flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId))
-const totalPairs = computed(() => currentSet.value?.cards.length)
+const tiles = ref<Tile[]>([]) // tiles shown on grid
+const selected = ref<Tile[]>([]) // selected tiles
+const currentSet = computed(() => flashcardStore.sets.find(s => s.id === flashcardStore.currentSetId)) // select a current set
+const totalPairs = computed(() => currentSet.value?.cards.length) // number of total pairs
 
-// build 4x4 grid
+// build grid
 onMounted(() => {
   // wait untul snapshot loads
   const unwatch = watch(
@@ -70,9 +71,10 @@ onMounted(() => {
   )
 })
 
+// builds the tile from flashcards
 function buildTiles() {
   const baseTiles: Tile[] = []
-
+  // term tile
   currentSet.value?.cards.forEach((card, index) => {
     baseTiles.push({
       id: index*2,
@@ -82,7 +84,7 @@ function buildTiles() {
       revealed: false,
       matched: false
     })
-    baseTiles.push({
+    baseTiles.push({ // definition tile
       id: index * 2 + 1,
       matchedId: index,
       type: "definition",
@@ -92,29 +94,33 @@ function buildTiles() {
     })
   })
 
-  //shuffle
+  // shuffle tiles and select 16 cards/8 pairs
   tiles.value = baseTiles
     .sort(() => Math.random() - .5)
     .slice(0, 16)
 }
 
+// game logic
 function selectTile(tile: Tile) {
   if (tile.revealed || tile.matched) return
   if (selected.value.length === 2) return
 
+  //reveal tile
   tile.revealed = true
   selected.value.push(tile)
 
+  // check match for two selected tiles
   if (selected.value.length === 2) {
     const [first, second] = selected.value
 
     if(!first || !second) return
 
+    // found match
     if (first.matchedId === second.matchedId) {
       first.matched = true
       second.matched = true
       selected.value = []
-    } else {
+    } else { // no match
       setTimeout(() => {
         first.revealed = false
         second.revealed = false
@@ -123,9 +129,12 @@ function selectTile(tile: Tile) {
     }
   }
 }
+
+// get total matches
 const matchedCount = computed(() =>
   tiles.value.filter((tile) => tile.matched).length / 2)
 
+// reset grid using same cards
 function resetGame() {
   selected.value = [];
   tiles.value = [];
