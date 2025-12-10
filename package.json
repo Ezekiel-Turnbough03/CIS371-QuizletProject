@@ -2,6 +2,7 @@
   "name": "quizletfinalproject",
   "version": "0.0.0",
   "private": true,
+  "homepage": "https://ezekiel-turnbough03.github.io/CIS371-QuizletProject/",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -17,7 +18,9 @@
     "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
     "lint:eslint": "eslint . --fix --cache",
     "lint": "run-s lint:*",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "firebase": "^12.6.0",
